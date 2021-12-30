@@ -42,7 +42,17 @@ def createOutputs(outDF, outputfile):
 		fig.savefig(outPlotName, dpi=200)
 		plt.close()
 
-def readInputs(inputfile, inputpath, chrNum, bpNum, genoNum,bafNum,lrrNum):
+def renameColumns(columnHeader):
+    if "Log R Ratio" in columnHeader:
+        return  "logRratio"
+    elif "B Allele Freq" in columnHeader:
+        return "BAF"
+    elif "GType" in columnHeader:
+        return "Genotype"
+    else:
+        return columnHeader
+
+def readInputs(inputfile, inputpath):
 	cnvInputFile=pd.read_csv(inputfile, delim_whitespace=True)
 	cnvInputFile['CNVID']=cnvInputFile['Chr'].map(str)+"_"+cnvInputFile['CNVStart'].map(str)+"_"+cnvInputFile['CNVEnd'].map(str)
 	outDF= pd.DataFrame()
@@ -51,7 +61,7 @@ def readInputs(inputfile, inputpath, chrNum, bpNum, genoNum,bafNum,lrrNum):
 	   for entry in entries:
 	    	print(entry)
 	    	genotypeInput=pd.read_csv(entry, sep='\t', low_memory=False)
-	    	genotypeInput.rename(columns={ genotypeInput.columns[chrNum]: "Chr", genotypeInput.columns[bpNum]: "Position",genotypeInput.columns[genoNum]: "Genotype",genotypeInput.columns[bafNum]: "BAF",genotypeInput.columns[lrrNum]: "logRratio"}, inplace = True)
+	    	genotypeInput.rename(mapper = renameColumns, axis = 'columns', inplace = True)
 	    	genotypeInput[["Chr","Position","BAF","logRratio"]] = genotypeInput[["Chr","Position","BAF","logRratio"]].apply(pd.to_numeric, errors='coerce')
 	    	bothInput=pd.merge(genotypeInput,cnvInputFile,on='Chr')
 	    	bothInput= bothInput.loc[bothInput['Genotype'] != "NC"]
@@ -90,20 +100,10 @@ def main(argv):
 	parser.add_argument('-i', type=str)
 	parser.add_argument('-p', type=str)
 	parser.add_argument('-o', type=str)
-	parser.add_argument('-chrNum', type=int)
-	parser.add_argument('-bpNum', type=int)
-	parser.add_argument('-genoNum', type=int)
-	parser.add_argument('-bafNum', type=int)
-	parser.add_argument('-lrrNum', type=int)
 	args = parser.parse_args()
 	inputfile = args.i
 	inputpath = args.p
 	outputfile = args.o
-	chrNum= args.chrNum -1
-	bpNum= args.bpNum -1
-	genoNum= args.genoNum -1
-	bafNum= args.bafNum -1
-	lrrNum= args.lrrNum	-1
 	outDF=[]
 	print('Input file is "'+inputfile+'"')
 	print('Input path is "'+inputpath+'"')
@@ -112,7 +112,7 @@ def main(argv):
 		os.makedirs('output/')
 	if not os.path.exists('output/plots/'):
 		os.makedirs('output/plots/')
-	outDF= readInputs(inputfile, inputpath, chrNum, bpNum, genoNum,bafNum,lrrNum)
+	outDF= readInputs(inputfile, inputpath)
 	createOutputs(outDF, outputfile)
 
 
