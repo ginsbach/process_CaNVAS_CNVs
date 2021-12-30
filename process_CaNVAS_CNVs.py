@@ -64,7 +64,8 @@ def readInputs(inputfile, inputpath):
 	    	genotypeInput.rename(mapper = renameColumns, axis = 'columns', inplace = True)
 	    	genotypeInput[["Chr","Position","BAF","logRratio"]] = genotypeInput[["Chr","Position","BAF","logRratio"]].apply(pd.to_numeric, errors='coerce')
 	    	bothInput=pd.merge(genotypeInput,cnvInputFile,on='Chr')
-	    	bothInput= bothInput.loc[bothInput['Genotype'] != "NC"]
+	    	if "Genotype" in bothInput.columns:
+	    		bothInput= bothInput.loc[bothInput['Genotype'] != "NC"]
 	    	inCNV=bothInput[bothInput["Position"].between(bothInput["CNVStart"], bothInput["CNVEnd"])]
 	    	leftCNV=bothInput[bothInput["Position"].between(bothInput["LeftStart"], bothInput["LeftEnd"])]
 	    	rightCNV=bothInput[bothInput["Position"].between(bothInput["RightStart"], bothInput["RightEnd"])]
